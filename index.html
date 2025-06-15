@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Interface</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        #chat-container { max-width: 600px; margin: auto; }
+        #output { border: 1px solid #ccc; padding: 10px; min-height: 200px; margin-bottom: 10px; }
+        #input { width: 80%; padding: 5px; }
+        button { padding: 5px 10px; }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <h2>Chatbot</h2>
+        <div id="output"></div>
+        <input type="text" id="input" placeholder="Type your message...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            const input = document.getElementById('input').value.trim();
+            const outputDiv = document.getElementById('output');
+
+            if (input.toLowerCase() === 'stop' || input.toLowerCase() === 'exit') {
+                outputDiv.innerHTML += '<p><strong>User:</strong> ' + input + '</p>';
+                outputDiv.innerHTML += '<p><strong>Bot:</strong> Chatbot stopped.</p>';
+                document.getElementById('input').disabled = true;
+                document.querySelector('button').disabled = true;
+                return;
+            }
+
+            if (input === '') return;
+
+            outputDiv.innerHTML += '<p><strong>User:</strong> ' + input + '</p>';
+            document.getElementById('input').value = '';
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: input })
+                });
+                const data = await response.json();
+                if (data.error) {
+                    outputDiv.innerHTML += '<p><strong>Error:</strong> ' + data.error + '</p>';
+                } else {
+                    outputDiv.innerHTML += '<p><strong>Bot:</strong> ' + data.message + '</p>';
+                }
+            } catch (error) {
+                outputDiv.innerHTML += '<p><strong>Error:</strong> Failed to connect to server.</p>';
+            }
+
+            outputDiv.scrollTop = outputDiv.scrollHeight;
+        }
+
+        document.getElementById('input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
+</body>
+</html>
